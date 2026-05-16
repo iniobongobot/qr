@@ -14,19 +14,64 @@
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; }
     .page { max-width: 760px; margin: 0 auto; padding: 20px 16px 32px; }
-    .topbar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; justify-content: center; }
-    .topbar a {
-      flex: 1 1 140px;
-      text-align: center;
-      text-decoration: none;
-      padding: 12px 14px;
-      border-radius: 14px;
+    .topbar { position: relative; display: flex; align-items: center; justify-content: flex-end; margin-bottom: 22px; }
+    .menu-button {
+      appearance: none;
+      border: 1px solid #d6dce6;
+      border-radius: 16px;
+      padding: 10px 14px;
       background: #fff;
       color: #1f3a68;
-      border: 1px solid #d6dce6;
-      transition: transform .15s ease, box-shadow .15s ease;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
     }
-    .topbar a:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(17, 55, 101, .08); }
+    .menu-button:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(17, 55, 101, .08); border-color: #cbd5e1; }
+    .menu-icon {
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 0.95rem;
+      line-height: 1;
+    }
+    .nav-menu {
+      position: absolute;
+      top: calc(100% + 12px);
+      right: 0;
+      left: 0;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      padding: 18px;
+      background: rgba(255,255,255,0.98);
+      border: 1px solid #d6dce6;
+      border-radius: 24px;
+      box-shadow: 0 28px 60px rgba(15, 23, 42, .16);
+      backdrop-filter: blur(16px);
+      z-index: 10;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .topbar.open .nav-menu { display: flex; opacity: 1; transform: translateY(0); }
+    .nav-menu a {
+      text-decoration: none;
+      color: #1f3a68;
+      background: #f8fbff;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
+    }
+    .nav-menu a:hover { transform: translateX(4px); box-shadow: 0 12px 28px rgba(17, 55, 101, .08); border-color: #d6dce6; }
     h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); margin: 0 0 10px; text-align: center; }
     .card {
       background: linear-gradient(180deg, #ffffff 0%, #f6f9fc 100%);
@@ -37,6 +82,24 @@
     }
     .card + .card { margin-top: 18px; }
     .notice { margin: 0; padding: 16px; border-radius: 18px; background: #fff3e2; color: #8f4b00; border: 1px solid #f2d1a0; }
+    .qr-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 auto 18px; }
+    .qr-switch { position: relative; display: inline-block; width: 52px; height: 28px; }
+    .qr-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .qr-slider { position: absolute; inset: 0; background: #d1d5db; border-radius: 999px; transition: background .2s ease; }
+    .qr-slider::before { content: '';
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, .16);
+      transition: transform .2s ease;
+    }
+    .qr-switch input:checked + .qr-slider { background: #2563eb; }
+    .qr-switch input:checked + .qr-slider::before { transform: translateX(24px); }
+    .qr-toggle-label { font-size: 1rem; color: #1d3557; user-select: none; }
     .qr-wrapper { display: grid; place-items: center; margin: 0 auto 20px; padding: 18px; background: #fff; border-radius: 26px; border: 1px solid #e5edf7; }
     .qr-wrapper img { width: min(100%, 260px); height: auto; display: block; }
     .details { display: grid; gap: 14px; }
@@ -55,10 +118,16 @@
 </head>
 <body>
   <div class="page">
-    <nav class="topbar">
-      <a href="index.html">Home</a>
-      <a href="create.html">Create QR</a>
-      <a id="editLink" href="create.html">Edit QR</a>
+    <nav class="topbar" aria-label="Primary navigation">
+      <button id="menuToggle" class="menu-button" type="button" aria-expanded="false" aria-controls="navMenu">
+        <span class="menu-icon">☰</span>
+        Menu
+      </button>
+      <div id="navMenu" class="nav-menu" hidden>
+        <a href="index.html">Home</a>
+        <a href="create.html">Create QR</a>
+        <a id="editLink" href="create.html">Edit QR</a>
+      </div>
     </nav>
 
     <h1>QR Helper</h1>
@@ -66,7 +135,15 @@
     <div class="card">
       <p id="message" class="notice">Loading QR payload...</p>
       <div id="result" style="display:none;">
-        <div class="qr-wrapper">
+        <div class="qr-toggle">
+          <label class="qr-switch">
+            <input id="toggleQr" type="checkbox">
+            <span class="qr-slider"></span>
+          </label>
+          <span class="qr-toggle-label">Click to show QR</span>
+        </div>
+
+        <div id="qrContainer" class="qr-wrapper" style="display:none;">
           <img id="qrImage" src="" alt="QR code">
         </div>
 
@@ -118,8 +195,29 @@
       const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
       return JSON.parse(bytesToUtf8(new Uint8Array(decrypted)));
     }
+    const socialServices = [
+      { value: 'linkedin', label: 'LinkedIn', prefix: 'https://www.linkedin.com/in/' },
+      { value: 'youtube', label: 'YouTube', prefix: 'https://www.youtube.com/' },
+      { value: 'instagram', label: 'Instagram', prefix: 'https://www.instagram.com/' },
+      { value: 'x', label: 'X', prefix: 'https://x.com/' },
+      { value: 'reddit', label: 'Reddit', prefix: 'https://www.reddit.com/user/' },
+      { value: 'snapchat', label: 'Snapchat', prefix: 'https://www.snapchat.com/add/' },
+      { value: 'tiktok', label: 'TikTok', prefix: 'https://www.tiktok.com/@' },
+      { value: 'facebook', label: 'Facebook', prefix: 'https://www.facebook.com/' },
+      { value: 'github', label: 'GitHub', prefix: 'https://github.com/' }
+    ];
     function getQueryParam(name) {
       return new URLSearchParams(location.search).get(name) || '';
+    }
+    function buildSocialUrl(item) {
+      if (item.username) {
+        const service = socialServices.find(service => service.value === item.name);
+        if (service) {
+          const username = item.username.trim().replace(/^@+/, '');
+          return service.prefix + encodeURIComponent(username);
+        }
+      }
+      return item.url || '';
     }
     function createList(title, items, itemHtml) {
       if (!items?.length) return '';
@@ -142,6 +240,16 @@
         const payload = await decryptPayload(token);
         message.style.display = 'none';
         result.style.display = 'block';
+        const qrContainer = document.getElementById('qrContainer');
+        const toggleQrInput = document.getElementById('toggleQr');
+        const qrToggleLabel = document.querySelector('.qr-toggle-label');
+        qrContainer.style.display = 'none';
+        toggleQrInput.checked = false;
+        toggleQrInput.addEventListener('change', () => {
+          const visible = toggleQrInput.checked;
+          qrContainer.style.display = visible ? 'grid' : 'none';
+          qrToggleLabel.textContent = visible ? 'Click to hide QR' : 'Click to show QR';
+        });
         document.getElementById('name').textContent = `${payload.firstName || ''} ${payload.lastName || ''}`.trim() || '—';
         const phoneRow = document.getElementById('phoneRow')
         const emailRow = document.getElementById('emailRow')
@@ -163,8 +271,10 @@
         }
 
         document.getElementById('socialsSection').innerHTML = createList('Socials', payload.socials || [], item => {
+          const url = buildSocialUrl(item);
           const label = item.name ? `${item.name}: ` : '';
-          return `<li>${label}<a href="${item.url}" target="_blank" rel="noreferrer">${item.url}</a></li>`;
+          const display = item.username ? `@${item.username}` : url;
+          return `<li>${label}<a href="${url}" target="_blank" rel="noreferrer">${display}</a></li>`;
         });
         document.getElementById('websitesSection').innerHTML = createList('Websites', payload.websites || [], item => {
           return `<li><a href="${item.url}" target="_blank" rel="noreferrer">${item.url}</a></li>`;
@@ -175,6 +285,15 @@
         document.getElementById('qrImage').src =
           'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' +
           encodeURIComponent(shareUrl);
+
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+        menuToggle.addEventListener('click', () => {
+          const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
+          menuToggle.setAttribute('aria-expanded', String(!isOpen));
+          navMenu.hidden = isOpen;
+          document.querySelector('.topbar').classList.toggle('open', !isOpen);
+        });
       } catch {
         message.textContent = 'Unable to decrypt QR data.';
         message.className = 'notice';

@@ -13,19 +13,64 @@
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; }
     .page { max-width: 760px; margin: 0 auto; padding: 20px 16px 32px; }
-    .topbar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; justify-content: center; }
-    .topbar a {
-      flex: 1 1 140px;
-      text-align: center;
-      text-decoration: none;
-      padding: 12px 14px;
-      border-radius: 14px;
+    .topbar { position: relative; display: flex; align-items: center; justify-content: flex-end; margin-bottom: 22px; }
+    .menu-button {
+      appearance: none;
+      border: 1px solid #d6dce6;
+      border-radius: 16px;
+      padding: 10px 14px;
       background: #fff;
       color: #1f3a68;
-      border: 1px solid #d6dce6;
-      transition: transform .15s ease, box-shadow .15s ease;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
     }
-    .topbar a:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(17, 55, 101, .08); }
+    .menu-button:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(17, 55, 101, .08); border-color: #cbd5e1; }
+    .menu-icon {
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 0.95rem;
+      line-height: 1;
+    }
+    .nav-menu {
+      position: absolute;
+      top: calc(100% + 12px);
+      right: 0;
+      left: 0;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      padding: 18px;
+      background: rgba(255,255,255,0.98);
+      border: 1px solid #d6dce6;
+      border-radius: 24px;
+      box-shadow: 0 28px 60px rgba(15, 23, 42, .16);
+      backdrop-filter: blur(16px);
+      z-index: 10;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .topbar.open .nav-menu { display: flex; opacity: 1; transform: translateY(0); }
+    .nav-menu a {
+      text-decoration: none;
+      color: #1f3a68;
+      background: #f8fbff;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
+    }
+    .nav-menu a:hover { transform: translateX(4px); box-shadow: 0 12px 28px rgba(17, 55, 101, .08); border-color: #d6dce6; }
     .card {
       background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
       border: 1px solid #dfe7f2;
@@ -37,7 +82,7 @@
     .error { margin: 0 0 16px; padding: 14px 16px; border-radius: 18px; background: #ffe8e8; color: #8f1d24; border: 1px solid #f2c2c2; display: none; }
     form { display: grid; gap: 18px; }
     label { display: block; margin-bottom: 8px; font-weight: 600; color: #2b3e5d; }
-    input {
+    input, select {
       width: 100%;
       padding: 14px 16px;
       border: 1px solid #c8d2e0;
@@ -84,10 +129,16 @@
 </head>
 <body>
   <div class="page">
-    <nav class="topbar">
-      <a href="index.html">Home</a>
-      <a href="create.html">Create QR</a>
-      <a id="editLink" href="create.html">Edit QR</a>
+    <nav class="topbar" aria-label="Primary navigation">
+      <button id="menuToggle" class="menu-button" type="button" aria-expanded="false" aria-controls="navMenu">
+        <span class="menu-icon">☰</span>
+        Menu
+      </button>
+      <div id="navMenu" class="nav-menu" hidden>
+        <a href="index.html">Home</a>
+        <a href="create.html">Create QR</a>
+        <a id="editLink" href="create.html">Edit QR</a>
+      </div>
     </nav>
 
     <div class="card">
@@ -185,7 +236,18 @@
       return JSON.parse(bytesToUtf8(new Uint8Array(decrypted)));
     }
     function getQueryParams() { return new URLSearchParams(location.search); }
-    const socials = [{ name: '', url: '' }];
+    const socialServices = [
+      { value: 'linkedin', label: 'LinkedIn', icon: '💼', prefix: 'https://www.linkedin.com/in/', placeholder: 'username' },
+      { value: 'youtube', label: 'YouTube', icon: '▶️', prefix: 'https://www.youtube.com/', placeholder: 'channel or username' },
+      { value: 'instagram', label: 'Instagram', icon: '📸', prefix: 'https://www.instagram.com/', placeholder: 'username' },
+      { value: 'x', label: 'X', icon: '✖️', prefix: 'https://x.com/', placeholder: 'username' },
+      { value: 'reddit', label: 'Reddit', icon: '👾', prefix: 'https://www.reddit.com/user/', placeholder: 'username' },
+      { value: 'snapchat', label: 'Snapchat', icon: '👻', prefix: 'https://www.snapchat.com/add/', placeholder: 'username' },
+      { value: 'tiktok', label: 'TikTok', icon: '🎵', prefix: 'https://www.tiktok.com/@', placeholder: 'username' },
+      { value: 'facebook', label: 'Facebook', icon: '📘', prefix: 'https://www.facebook.com/', placeholder: 'username' },
+      { value: 'github', label: 'GitHub', icon: '🐙', prefix: 'https://github.com/', placeholder: 'username' }
+    ];
+    const socials = [{ service: 'linkedin', username: '' }];
     const websites = [{ url: '' }];
     const socialList = document.getElementById('socialList');
     const websiteList = document.getElementById('websiteList');
@@ -198,17 +260,38 @@
       errorEl.textContent = message;
       errorEl.style.display = 'block';
     }
+    function buildSocialUrl(item) {
+      if (!item.service || !item.username.trim()) return '';
+      const service = socialServices.find(service => service.value === item.service);
+      if (!service) return '';
+      const username = item.username.trim().replace(/^@+/, '');
+      return service.prefix + encodeURIComponent(username);
+    }
+    function deriveUsernameFromUrl(serviceValue, url) {
+      const service = socialServices.find(service => service.value === serviceValue);
+      if (!service || !url) return '';
+      const prefix = service.prefix;
+      if (!url.startsWith(prefix)) return '';
+      return decodeURIComponent(url.slice(prefix.length).replace(/^@+/, ''));
+    }
     function renderSocials() {
       socialList.innerHTML = '';
       socials.forEach((item, index) => {
+        const service = socialServices.find(service => service.value === item.service) || socialServices[0];
         const node = document.createElement('div');
         node.className = 'item';
         node.innerHTML = `
-          <label>Social name
-            <input data-list="socials" data-index="${index}" data-field="name" value="${item.name}">
+              <label>Social platform
+            <select data-list="socials" data-index="${index}" data-field="service">
+              ${socialServices.map(service => `
+                <option value="${service.value}"${service.value === (item.service || service.value) ? ' selected' : ''}>
+                  ${service.icon} ${service.label}
+                </option>
+              `).join('')}
+            </select>
           </label>
-          <label>URL
-            <input data-list="socials" data-index="${index}" data-field="url" value="${item.url}">
+          <label>Username
+            <input placeholder="${service.placeholder}" data-list="socials" data-index="${index}" data-field="username" value="${item.username || ''}">
           </label>
           <button type="button" data-action="remove" data-list="socials" data-index="${index}" class="secondary">Remove social</button>
         `;
@@ -236,7 +319,13 @@
         if (!listName) return;
         const index = Number(target.dataset.index);
         const field = target.dataset.field;
-        if (listName === 'socials') socials[index][field] = target.value;
+        if (listName === 'socials') {
+          socials[index][field] = target.value;
+          if (field === 'service' || field === 'username') {
+            renderSocials();
+            return;
+          }
+        }
         if (listName === 'websites') websites[index][field] = target.value;
       });
       container.addEventListener('click', event => {
@@ -246,7 +335,7 @@
         const index = Number(button.dataset.index);
         if (listName === 'socials') {
           socials.splice(index, 1);
-          if (!socials.length) socials.push({ name: '', url: '' });
+          if (!socials.length) socials.push({ service: 'linkedin', username: '' });
           renderSocials();
         }
         if (listName === 'websites') {
@@ -266,7 +355,7 @@
         lastName,
         phone,
         email,
-        socials: socials.filter(item => item.name.trim() || item.url.trim()).map(item => ({ name: item.name.trim(), url: item.url.trim() })),
+        socials: socials.filter(item => item.service.trim() && item.username.trim()).map(item => ({ name: item.service.trim(), username: item.username.trim() })),
         websites: websites.filter(item => item.url.trim()).map(item => ({ url: item.url.trim() }))
       };
     }
@@ -289,7 +378,14 @@
           document.getElementById('email').value = payload.email || '';
           socials.length = 0;
           websites.length = 0;
-          (payload.socials || [{ name: '', url: '' }]).forEach(item => socials.push({ name: item.name || '', url: item.url || '' }));
+          (payload.socials || [{ name: '', username: '' }]).forEach(item => {
+            const service = socialServices.find(service => service.value === item.name) ? item.name : 'linkedin';
+            const username = (item.username || '').trim() || deriveUsernameFromUrl(service, item.url || '');
+            socials.push({
+              service,
+              username
+            });
+          });
           (payload.websites || [{ url: '' }]).forEach(item => websites.push({ url: item.url || '' }));
           renderSocials();
           renderWebsites();
@@ -298,7 +394,7 @@
           setError('Unable to load existing QR data.');
         }
       }
-      document.getElementById('addSocial').addEventListener('click', () => { socials.push({ name: '', url: '' }); renderSocials(); });
+      document.getElementById('addSocial').addEventListener('click', () => { socials.push({ service: 'linkedin', username: '' }); renderSocials(); });
       document.getElementById('addWebsite').addEventListener('click', () => { websites.push({ url: '' }); renderWebsites(); });
       document.getElementById('qrForm').addEventListener('submit', async event => {
         event.preventDefault();
@@ -311,6 +407,15 @@
         } catch {
           setError('Unable to encrypt the form data.');
         }
+      });
+
+      const menuToggle = document.getElementById('menuToggle');
+      const navMenu = document.getElementById('navMenu');
+      menuToggle.addEventListener('click', () => {
+        const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
+        menuToggle.setAttribute('aria-expanded', String(!isOpen));
+        navMenu.hidden = isOpen;
+        document.querySelector('.topbar').classList.toggle('open', !isOpen);
       });
     });
   </script>
