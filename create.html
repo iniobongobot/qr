@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create QR Form</title>
+  <style>
+    :root {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #eef2f6;
+      color: #162a48;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    .page { max-width: 760px; margin: 0 auto; padding: 20px 16px 32px; }
+    .topbar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; justify-content: center; }
+    .topbar a {
+      flex: 1 1 140px;
+      text-align: center;
+      text-decoration: none;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fff;
+      color: #1f3a68;
+      border: 1px solid #d6dce6;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .topbar a:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(17, 55, 101, .08); }
+    .card {
+      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+      border: 1px solid #dfe7f2;
+      border-radius: 28px;
+      box-shadow: 0 18px 45px rgba(26, 61, 117, .08);
+      padding: 24px;
+    }
+    h1 { margin: 0 0 18px; font-size: clamp(1.8rem, 4vw, 2.4rem); text-align: center; }
+    .error { margin: 0 0 16px; padding: 14px 16px; border-radius: 18px; background: #ffe8e8; color: #8f1d24; border: 1px solid #f2c2c2; display: none; }
+    form { display: grid; gap: 18px; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; color: #2b3e5d; }
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #c8d2e0;
+      border-radius: 16px;
+      font-size: 1rem;
+      background: #fbfdff;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    input:focus { outline: none; border-color: #6a98ff; box-shadow: 0 0 0 4px rgba(106, 152, 255, .16); }
+    .section { padding: 14px 0 0; }
+    .section h2 { margin: 0 0 12px; font-size: 1.05rem; color: #1e3a61; }
+    .item {
+      padding: 18px;
+      border: 1px solid #d9e3f1;
+      border-radius: 18px;
+      background: #ffffff;
+      display: grid;
+      gap: 12px;
+    }
+    .item button { width: fit-content; margin-top: 4px; }
+    .button-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 16px;
+      padding: 14px 18px;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s ease, transform .15s ease;
+    }
+    button:hover { background: #1d4ed8; transform: translateY(-1px); }
+    button.secondary {
+      background: #475569;
+    }
+    button.secondary:hover { background: #334155; }
+    @media (max-width: 520px) {
+      .card { padding: 18px; }
+      .button-row { flex-direction: column; align-items: stretch; }
+      .topbar { gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="topbar">
+      <a href="index.html">Home</a>
+      <a href="create.html">Create QR</a>
+      <a id="editLink" href="create.html">Edit QR</a>
+    </nav>
+
+    <div class="card">
+      <h1 id="pageTitle">Create QR Form</h1>
+      <p id="error" class="error"></p>
+
+      <form id="qrForm">
+        <div>
+          <label for="firstName">First name</label>
+          <input id="firstName" name="firstName" required>
+        </div>
+        <div>
+          <label for="lastName">Last name</label>
+          <input id="lastName" name="lastName" required>
+        </div>
+        <div>
+          <label for="phone">Phone</label>
+          <input id="phone" name="phone">
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email">
+        </div>
+
+        <section class="section">
+          <h2>Socials</h2>
+          <div id="socialList"></div>
+          <div class="button-row">
+            <button type="button" id="addSocial" class="secondary">Add social</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Websites</h2>
+          <div id="websiteList"></div>
+          <div class="button-row">
+            <button type="button" id="addWebsite" class="secondary">Add website</button>
+          </div>
+        </section>
+
+        <div class="button-row">
+          <button type="submit" id="submitButton">Create QR</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const password = 'qr-helper-secret-passphrase';
+    const salt = 'qr-helper-salt';
+    function utf8ToBytes(str) { return new TextEncoder().encode(str); }
+    function bytesToUtf8(bytes) { return new TextDecoder().decode(bytes); }
+    function base64UrlEncode(bytes) {
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+    function base64UrlDecode(str) {
+      const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = b64 + '==='.slice((b64.length + 3) % 4);
+      const binary = atob(padded);
+      const out = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
+      return out;
+    }
+    async function getKey() {
+      const baseKey = await crypto.subtle.importKey('raw', utf8ToBytes(password), 'PBKDF2', false, ['deriveKey']);
+      return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: utf8ToBytes(salt), iterations: 100000, hash: 'SHA-256' },
+        baseKey,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+      );
+    }
+    async function encryptPayload(payload) {
+      const key = await getKey();
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        utf8ToBytes(JSON.stringify(payload))
+      );
+      const combined = new Uint8Array(iv.length + encrypted.byteLength);
+      combined.set(iv, 0);
+      combined.set(new Uint8Array(encrypted), iv.length);
+      return base64UrlEncode(combined);
+    }
+    async function decryptPayload(token) {
+      const raw = base64UrlDecode(token);
+      const iv = raw.slice(0, 12);
+      const data = raw.slice(12);
+      const key = await getKey();
+      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+      return JSON.parse(bytesToUtf8(new Uint8Array(decrypted)));
+    }
+    function getQueryParams() { return new URLSearchParams(location.search); }
+    const socials = [{ name: '', url: '' }];
+    const websites = [{ url: '' }];
+    const socialList = document.getElementById('socialList');
+    const websiteList = document.getElementById('websiteList');
+    const errorEl = document.getElementById('error');
+    const pageTitle = document.getElementById('pageTitle');
+    const submitButton = document.getElementById('submitButton');
+    const editLink = document.getElementById('editLink');
+    function setError(message) {
+      if (!message) { errorEl.style.display = 'none'; return; }
+      errorEl.textContent = message;
+      errorEl.style.display = 'block';
+    }
+    function renderSocials() {
+      socialList.innerHTML = '';
+      socials.forEach((item, index) => {
+        const node = document.createElement('div');
+        node.className = 'item';
+        node.innerHTML = `
+          <label>Social name
+            <input data-list="socials" data-index="${index}" data-field="name" value="${item.name}">
+          </label>
+          <label>URL
+            <input data-list="socials" data-index="${index}" data-field="url" value="${item.url}">
+          </label>
+          <button type="button" data-action="remove" data-list="socials" data-index="${index}" class="secondary">Remove social</button>
+        `;
+        socialList.appendChild(node);
+      });
+    }
+    function renderWebsites() {
+      websiteList.innerHTML = '';
+      websites.forEach((item, index) => {
+        const node = document.createElement('div');
+        node.className = 'item';
+        node.innerHTML = `
+          <label>Website URL
+            <input data-list="websites" data-index="${index}" data-field="url" value="${item.url}">
+          </label>
+          <button type="button" data-action="remove" data-list="websites" data-index="${index}" class="secondary">Remove website</button>
+        `;
+        websiteList.appendChild(node);
+      });
+    }
+    function attachListHandlers(container) {
+      container.addEventListener('input', event => {
+        const target = event.target;
+        const listName = target.dataset.list;
+        if (!listName) return;
+        const index = Number(target.dataset.index);
+        const field = target.dataset.field;
+        if (listName === 'socials') socials[index][field] = target.value;
+        if (listName === 'websites') websites[index][field] = target.value;
+      });
+      container.addEventListener('click', event => {
+        const button = event.target;
+        if (button.dataset.action !== 'remove') return;
+        const listName = button.dataset.list;
+        const index = Number(button.dataset.index);
+        if (listName === 'socials') {
+          socials.splice(index, 1);
+          if (!socials.length) socials.push({ name: '', url: '' });
+          renderSocials();
+        }
+        if (listName === 'websites') {
+          websites.splice(index, 1);
+          if (!websites.length) websites.push({ url: '' });
+          renderWebsites();
+        }
+      });
+    }
+    function gatherPayload() {
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const email = document.getElementById('email').value.trim();
+      return {
+        firstName,
+        lastName,
+        phone,
+        email,
+        socials: socials.filter(item => item.name.trim() || item.url.trim()).map(item => ({ name: item.name.trim(), url: item.url.trim() })),
+        websites: websites.filter(item => item.url.trim()).map(item => ({ url: item.url.trim() }))
+      };
+    }
+    document.addEventListener('DOMContentLoaded', async () => {
+      attachListHandlers(socialList);
+      attachListHandlers(websiteList);
+      renderSocials();
+      renderWebsites();
+      const params = getQueryParams();
+      const mode = params.get('mode');
+      const data = params.get('data');
+      if (mode === 'edit' && data) {
+        pageTitle.textContent = 'Edit QR Form';
+        submitButton.textContent = 'Update QR';
+        try {
+          const payload = await decryptPayload(data);
+          document.getElementById('firstName').value = payload.firstName || '';
+          document.getElementById('lastName').value = payload.lastName || '';
+          document.getElementById('phone').value = payload.phone || '';
+          document.getElementById('email').value = payload.email || '';
+          socials.length = 0;
+          websites.length = 0;
+          (payload.socials || [{ name: '', url: '' }]).forEach(item => socials.push({ name: item.name || '', url: item.url || '' }));
+          (payload.websites || [{ url: '' }]).forEach(item => websites.push({ url: item.url || '' }));
+          renderSocials();
+          renderWebsites();
+          editLink.href = `create.html?mode=edit&data=${encodeURIComponent(data)}`;
+        } catch {
+          setError('Unable to load existing QR data.');
+        }
+      }
+      document.getElementById('addSocial').addEventListener('click', () => { socials.push({ name: '', url: '' }); renderSocials(); });
+      document.getElementById('addWebsite').addEventListener('click', () => { websites.push({ url: '' }); renderWebsites(); });
+      document.getElementById('qrForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        setError('');
+        if (!crypto?.subtle) { setError('Encryption API unavailable on this device.'); return; }
+        try {
+          const payload = gatherPayload();
+          const token = await encryptPayload(payload);
+          location.href = `index.html?data=${encodeURIComponent(token)}`;
+        } catch {
+          setError('Unable to encrypt the form data.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

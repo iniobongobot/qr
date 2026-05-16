@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Helper</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #eef2f6;
+      color: #12263f;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    .page { max-width: 760px; margin: 0 auto; padding: 20px 16px 32px; }
+    .topbar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; justify-content: center; }
+    .topbar a {
+      flex: 1 1 140px;
+      text-align: center;
+      text-decoration: none;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fff;
+      color: #1f3a68;
+      border: 1px solid #d6dce6;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .topbar a:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(17, 55, 101, .08); }
+    h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); margin: 0 0 10px; text-align: center; }
+    .card {
+      background: linear-gradient(180deg, #ffffff 0%, #f6f9fc 100%);
+      border: 1px solid #dfe7f2;
+      border-radius: 26px;
+      box-shadow: 0 18px 45px rgba(26, 61, 117, .08);
+      padding: 22px;
+    }
+    .card + .card { margin-top: 18px; }
+    .notice { margin: 0; padding: 16px; border-radius: 18px; background: #fff3e2; color: #8f4b00; border: 1px solid #f2d1a0; }
+    .qr-wrapper { display: grid; place-items: center; margin: 0 auto 20px; padding: 18px; background: #fff; border-radius: 26px; border: 1px solid #e5edf7; }
+    .qr-wrapper img { width: min(100%, 260px); height: auto; display: block; }
+    .details { display: grid; gap: 14px; }
+    .details p { margin: 0; line-height: 1.65; }
+    .details strong { display: inline-block; min-width: 74px; color: #344767; }
+    .details a { color: #2563eb; text-decoration: none; word-break: break-all; }
+    .section-title { margin: 0 0 12px; font-size: 1.05rem; color: #1d3557; }
+    .list { margin: 0; padding-left: 20px; }
+    .list li { margin-bottom: 10px; }
+    @media (max-width: 520px) {
+      .topbar { gap: 10px; }
+      .topbar a { font-size: 0.95rem; padding: 10px 12px; }
+      .card { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="topbar">
+      <a href="index.html">Home</a>
+      <a href="create.html">Create QR</a>
+      <a id="editLink" href="create.html">Edit QR</a>
+    </nav>
+
+    <h1>QR Helper</h1>
+
+    <div class="card">
+      <p id="message" class="notice">Loading QR payload...</p>
+      <div id="result" style="display:none;">
+        <div class="qr-wrapper">
+          <img id="qrImage" src="" alt="QR code">
+        </div>
+
+        <div class="details">
+          <p><strong>Name</strong><span id="name"></span></p>
+          <p id="phoneRow"><strong>Phone</strong><a id="phoneLink" href=""></a></p>
+          <p id="emailRow"><strong>Email</strong><a id="emailLink" href=""></a></p>
+
+          <div id="socialsSection"></div>
+          <div id="websitesSection"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const password = 'qr-helper-secret-passphrase';
+    const salt = 'qr-helper-salt';
+    function utf8ToBytes(str) { return new TextEncoder().encode(str); }
+    function bytesToUtf8(bytes) { return new TextDecoder().decode(bytes); }
+    function base64UrlEncode(bytes) {
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+    function base64UrlDecode(str) {
+      const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = b64 + '==='.slice((b64.length + 3) % 4);
+      const binary = atob(padded);
+      const out = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
+      return out;
+    }
+    async function getKey() {
+      const baseKey = await crypto.subtle.importKey('raw', utf8ToBytes(password), 'PBKDF2', false, ['deriveKey']);
+      return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: utf8ToBytes(salt), iterations: 100000, hash: 'SHA-256' },
+        baseKey,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['decrypt']
+      );
+    }
+    async function decryptPayload(token) {
+      const raw = base64UrlDecode(token);
+      const iv = raw.slice(0, 12);
+      const data = raw.slice(12);
+      const key = await getKey();
+      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+      return JSON.parse(bytesToUtf8(new Uint8Array(decrypted)));
+    }
+    function getQueryParam(name) {
+      return new URLSearchParams(location.search).get(name) || '';
+    }
+    function createList(title, items, itemHtml) {
+      if (!items?.length) return '';
+      return `<h3 class="section-title">${title}</h3><ul class="list">${items.map(itemHtml).join('')}</ul>`;
+    }
+    document.addEventListener('DOMContentLoaded', async () => {
+      const token = getQueryParam('data');
+      const message = document.getElementById('message');
+      const result = document.getElementById('result');
+      const editLink = document.getElementById('editLink');
+      if (!token) {
+        message.textContent = 'No QR data found. Use Create QR to generate one.';
+        return;
+      }
+      if (!crypto?.subtle) {
+        message.textContent = 'Encryption API unavailable on this device.';
+        return;
+      }
+      try {
+        const payload = await decryptPayload(token);
+        message.style.display = 'none';
+        result.style.display = 'block';
+        document.getElementById('name').textContent = `${payload.firstName || ''} ${payload.lastName || ''}`.trim() || '—';
+        const phoneRow = document.getElementById('phoneRow')
+        const emailRow = document.getElementById('emailRow')
+
+        if (payload.phone) {
+          phoneRow.style.display = 'block'
+          phoneLink.href = `tel:${payload.phone}`
+          phoneLink.textContent = payload.phone
+        } else {
+          phoneRow.style.display = 'none'
+        }
+
+        if (payload.email) {
+          emailRow.style.display = 'block'
+          emailLink.href = `mailto:${payload.email}`
+          emailLink.textContent = payload.email
+        } else {
+          emailRow.style.display = 'none'
+        }
+
+        document.getElementById('socialsSection').innerHTML = createList('Socials', payload.socials || [], item => {
+          const label = item.name ? `${item.name}: ` : '';
+          return `<li>${label}<a href="${item.url}" target="_blank" rel="noreferrer">${item.url}</a></li>`;
+        });
+        document.getElementById('websitesSection').innerHTML = createList('Websites', payload.websites || [], item => {
+          return `<li><a href="${item.url}" target="_blank" rel="noreferrer">${item.url}</a></li>`;
+        });
+        editLink.href = `create.html?mode=edit&data=${encodeURIComponent(token)}`;
+
+        const shareUrl = `${location.origin}${location.pathname}?data=${encodeURIComponent(token)}`;
+        document.getElementById('qrImage').src =
+          'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' +
+          encodeURIComponent(shareUrl);
+      } catch {
+        message.textContent = 'Unable to decrypt QR data.';
+        message.className = 'notice';
+      }
+    });
+  </script>
+</body>
+</html>
