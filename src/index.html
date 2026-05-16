@@ -228,6 +228,14 @@
       const message = document.getElementById('message');
       const result = document.getElementById('result');
       const editLink = document.getElementById('editLink');
+      const menuToggle = document.getElementById('menuToggle');
+      const navMenu = document.getElementById('navMenu');
+      menuToggle.addEventListener('click', () => {
+        const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
+        menuToggle.setAttribute('aria-expanded', String(!isOpen));
+        navMenu.hidden = isOpen;
+        document.querySelector('.topbar').classList.toggle('open', !isOpen);
+      });
       if (!token) {
         message.textContent = 'No QR data found. Use Create QR to generate one.';
         return;
