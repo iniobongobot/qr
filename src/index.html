@@ -197,7 +197,7 @@
     }
     const socialServices = [
       { value: 'linkedin', label: 'LinkedIn', prefix: 'https://www.linkedin.com/in/' },
-      { value: 'youtube', label: 'YouTube', prefix: 'https://www.youtube.com/' },
+      { value: 'youtube', label: 'YouTube', prefix: 'https://www.youtube.com/@' },
       { value: 'instagram', label: 'Instagram', prefix: 'https://www.instagram.com/' },
       { value: 'x', label: 'X', prefix: 'https://x.com/' },
       { value: 'reddit', label: 'Reddit', prefix: 'https://www.reddit.com/user/' },
@@ -230,12 +230,16 @@
       const editLink = document.getElementById('editLink');
       const menuToggle = document.getElementById('menuToggle');
       const navMenu = document.getElementById('navMenu');
-      menuToggle.addEventListener('click', () => {
-        const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
-        menuToggle.setAttribute('aria-expanded', String(!isOpen));
-        navMenu.hidden = isOpen;
-        document.querySelector('.topbar').classList.toggle('open', !isOpen);
-      });
+      if (menuToggle && navMenu) {
+        menuToggle.addEventListener('click', () => {
+          const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
+          menuToggle.setAttribute('aria-expanded', String(!isOpen));
+          navMenu.hidden = isOpen;
+          document.querySelector('.topbar').classList.toggle('open', !isOpen);
+        });
+      } else {
+        console.warn('Menu elements not found on this page.');
+      }
       if (!token) {
         message.textContent = 'No QR data found. Use Create QR to generate one.';
         return;
@@ -294,14 +298,7 @@
           'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' +
           encodeURIComponent(shareUrl);
 
-        const menuToggle = document.getElementById('menuToggle');
-        const navMenu = document.getElementById('navMenu');
-        menuToggle.addEventListener('click', () => {
-          const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
-          menuToggle.setAttribute('aria-expanded', String(!isOpen));
-          navMenu.hidden = isOpen;
-          document.querySelector('.topbar').classList.toggle('open', !isOpen);
-        });
+        // menu already initialized above; no-op here to avoid duplicate handlers
       } catch {
         message.textContent = 'Unable to decrypt QR data.';
         message.className = 'notice';
