@@ -30,112 +30,98 @@
       align-items: center;
       gap: 10px;
       font-weight: 700;
-      transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
+      transition: all .15s ease;
     }
     .menu-button:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(17, 55, 101, .08); border-color: #cbd5e1; }
-    .menu-icon {
-      width: 24px;
-      height: 24px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      background: #2563eb;
-      color: #fff;
-      font-size: 0.95rem;
-      line-height: 1;
-    }
+    .menu-icon { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: #2563eb; color: #fff; font-size: 0.95rem; }
+
     .nav-menu {
       position: absolute;
-      top: calc(100% + 12px);
-      right: 0;
-      left: 0;
-      display: none;
-      flex-direction: column;
-      gap: 12px;
-      padding: 18px;
-      background: rgba(255,255,255,0.98);
-      border: 1px solid #d6dce6;
-      border-radius: 24px;
-      box-shadow: 0 28px 60px rgba(15, 23, 42, .16);
-      backdrop-filter: blur(16px);
-      z-index: 10;
-      opacity: 0;
-      transform: translateY(-10px);
-      transition: opacity .25s ease, transform .25s ease;
+      top: calc(100% + 12px); right: 0; left: 0;
+      display: none; flex-direction: column; gap: 12px; padding: 18px;
+      background: rgba(255,255,255,0.98); border: 1px solid #d6dce6; border-radius: 24px;
+      box-shadow: 0 28px 60px rgba(15, 23, 42, .16); backdrop-filter: blur(16px); z-index: 10;
     }
-    .topbar.open .nav-menu { display: flex; opacity: 1; transform: translateY(0); }
-    .nav-menu a {
-      text-decoration: none;
-      color: #1f3a68;
-      background: #f8fbff;
-      padding: 14px 16px;
-      border-radius: 16px;
-      border: 1px solid transparent;
-      transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
-    }
-    .nav-menu a:hover { transform: translateX(4px); box-shadow: 0 12px 28px rgba(17, 55, 101, .08); border-color: #d6dce6; }
+    .topbar.open .nav-menu { display: flex; }
+    .nav-menu a { text-decoration: none; color: #1f3a68; background: #f8fbff; padding: 14px 16px; border-radius: 16px; transition: all .15s ease; }
 
     h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); margin: 0 0 10px; text-align: center; }
     
     .card {
       background: linear-gradient(180deg, #ffffff 0%, #f6f9fc 100%);
-      border: 1px solid #dfe7f2;
-      border-radius: 26px;
-      box-shadow: 0 18px 45px rgba(26, 61, 117, .08);
-      padding: 22px;
+      border: 1px solid #dfe7f2; border-radius: 26px;
+      box-shadow: 0 18px 45px rgba(26, 61, 117, .08); padding: 22px;
     }
-    .card + .card { margin-top: 18px; }
     
     .notice { margin: 0; padding: 16px; border-radius: 18px; background: #fff3e2; color: #8f4b00; border: 1px solid #f2d1a0; }
     
+    /* QR Styles */
     .qr-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 auto 18px; }
     .qr-switch { position: relative; display: inline-block; width: 52px; height: 28px; }
-    .qr-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .qr-slider { position: absolute; inset: 0; background: #d1d5db; border-radius: 999px; transition: background .2s ease; }
-    .qr-slider::before { content: ''; position: absolute; left: 4px; top: 4px; width: 20px; height: 20px; background: #fff; border-radius: 50%; box-shadow: 0 2px 6px rgba(15, 23, 42, .16); transition: transform .2s ease; }
+    .qr-switch input { opacity: 0; width: 0; height: 0; }
+    .qr-slider { position: absolute; inset: 0; background: #d1d5db; border-radius: 999px; transition: .2s; cursor: pointer; }
+    .qr-slider::before { content: ''; position: absolute; left: 4px; top: 4px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: .2s; }
     .qr-switch input:checked + .qr-slider { background: #2563eb; }
     .qr-switch input:checked + .qr-slider::before { transform: translateX(24px); }
-    
     .qr-wrapper { display: grid; place-items: center; margin: 0 auto 20px; padding: 18px; background: #fff; border-radius: 26px; border: 1px solid #e5edf7; }
-    .qr-wrapper img { width: min(100%, 260px); height: auto; display: block; }
+    .qr-wrapper img { width: min(100%, 260px); height: auto; }
     
-    .details { display: grid; gap: 14px; }
-    .details p { margin: 0; line-height: 1.65; display: flex; align-items: center; }
-    .details strong { display: inline-block; min-width: 80px; color: #344767; }
+    /* Profile Details */
+    .details { display: grid; gap: 10px; }
+    .details p { margin: 0; display: flex; align-items: center; line-height: 1.6; }
+    .details strong { min-width: 70px; color: #344767; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
     .details a { color: #2563eb; text-decoration: none; word-break: break-all; }
+
+    /* SOCIAL GRID STYLING */
+    .section-title { margin: 24px 0 12px; font-size: 1rem; color: #1d3557; font-weight: 700; border-bottom: 1px solid #e5edf7; padding-bottom: 8px; }
     
-    /* Social List Styling */
-    .section-title { margin: 20px 0 12px; font-size: 1.05rem; color: #1d3557; border-bottom: 1px solid #e5edf7; padding-bottom: 5px; }
-    .list { margin: 0; padding: 0; list-style: none; }
-    .list li { margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
-    
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .social-item {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-decoration: none;
+    }
+
     .social-icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 34px;
-      height: 34px;
-      background: #f0f4f8;
-      border-radius: 10px;
-      color: #2563eb;
-      font-size: 1.1rem;
-      transition: all 0.2s ease;
-      flex-shrink: 0;
+      width: 50px;
+      height: 50px;
+      background: #ffffff;
+      border: 1px solid #dfe7f2;
+      border-radius: 14px;
+      color: #495161;
+      font-size: 1.3rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .list li:hover .social-icon { background: #2563eb; color: #fff; transform: scale(1.05); }
+
+    .social-item:hover .social-icon {
+      background: #8690a5;
+      color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);
+      border-color: #282a2d;
+    }
 
     @media (max-width: 520px) {
       .card { padding: 18px; }
+      .social-grid { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); }
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <nav class="topbar" aria-label="Primary navigation">
-      <button id="menuToggle" class="menu-button" type="button" aria-expanded="false" aria-controls="navMenu">
-        <span class="menu-icon">☰</span>
-        Menu
+    <nav class="topbar">
+      <button id="menuToggle" class="menu-button" type="button" aria-expanded="false">
+        <span class="menu-icon">☰</span> Menu
       </button>
       <div id="navMenu" class="nav-menu" hidden>
         <a href="index.html">Home</a>
@@ -177,7 +163,6 @@
     const password = 'qr-helper-secret-passphrase';
     const salt = 'qr-helper-salt';
     
-    // Icon Mapping
     const iconMap = {
       linkedin: 'fa-brands fa-linkedin',
       youtube: 'fa-brands fa-youtube',
@@ -190,30 +175,22 @@
       github: 'fa-brands fa-github'
     };
 
-    function utf8ToBytes(str) { return new TextEncoder().encode(str); }
-    function bytesToUtf8(bytes) { return new TextDecoder().decode(bytes); }
-    function base64UrlEncode(bytes) {
-      let binary = '';
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    }
-    function base64UrlDecode(str) {
+    const utf8ToBytes = (str) => new TextEncoder().encode(str);
+    const bytesToUtf8 = (bytes) => new TextDecoder().decode(bytes);
+    const base64UrlDecode = (str) => {
       const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
       const padded = b64 + '==='.slice((b64.length + 3) % 4);
       const binary = atob(padded);
       const out = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
       return out;
-    }
+    };
 
     async function getKey() {
       const baseKey = await crypto.subtle.importKey('raw', utf8ToBytes(password), 'PBKDF2', false, ['deriveKey']);
       return crypto.subtle.deriveKey(
         { name: 'PBKDF2', salt: utf8ToBytes(salt), iterations: 100000, hash: 'SHA-256' },
-        baseKey,
-        { name: 'AES-GCM', length: 256 },
-        false,
-        ['decrypt']
+        baseKey, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
       );
     }
 
@@ -227,118 +204,97 @@
     }
 
     const socialServices = [
-      { value: 'linkedin', label: 'LinkedIn', prefix: 'https://www.linkedin.com/in/' },
-      { value: 'youtube', label: 'YouTube', prefix: 'https://www.youtube.com/@' },
-      { value: 'instagram', label: 'Instagram', prefix: 'https://www.instagram.com/' },
-      { value: 'x', label: 'X', prefix: 'https://x.com/' },
-      { value: 'reddit', label: 'Reddit', prefix: 'https://www.reddit.com/user/' },
-      { value: 'snapchat', label: 'Snapchat', prefix: 'https://www.snapchat.com/add/' },
-      { value: 'tiktok', label: 'TikTok', prefix: 'https://www.tiktok.com/@' },
-      { value: 'facebook', label: 'Facebook', prefix: 'https://www.facebook.com/' },
-      { value: 'github', label: 'GitHub', prefix: 'https://github.com/' }
+      { value: 'linkedin', prefix: 'https://www.linkedin.com/in/' },
+      { value: 'youtube', prefix: 'https://www.youtube.com/@' },
+      { value: 'instagram', prefix: 'https://www.instagram.com/' },
+      { value: 'x', prefix: 'https://x.com/' },
+      { value: 'reddit', prefix: 'https://www.reddit.com/user/' },
+      { value: 'snapchat', prefix: 'https://www.snapchat.com/add/' },
+      { value: 'tiktok', prefix: 'https://www.tiktok.com/@' },
+      { value: 'facebook', prefix: 'https://www.facebook.com/' },
+      { value: 'github', prefix: 'https://github.com/' }
     ];
-
-    function getQueryParam(name) { return new URLSearchParams(location.search).get(name) || ''; }
 
     function buildSocialUrl(item) {
       if (item.username) {
         const service = socialServices.find(s => s.value === item.name);
-        if (service) {
-          const username = item.username.trim().replace(/^@+/, '');
-          return service.prefix + encodeURIComponent(username);
-        }
+        if (service) return service.prefix + encodeURIComponent(item.username.trim().replace(/^@+/, ''));
       }
       return item.url || '';
     }
 
-    function createList(title, items, itemHtml) {
+    function createGrid(title, items, itemHtml) {
       if (!items?.length) return '';
-      return `<h3 class="section-title">${title}</h3><ul class="list">${items.map(itemHtml).join('')}</ul>`;
+      return `<h3 class="section-title">${title}</h3><div class="social-grid">${items.map(itemHtml).join('')}</div>`;
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      const token = getQueryParam('data');
-      const message = document.getElementById('message');
-      const result = document.getElementById('result');
-      const editLink = document.getElementById('editLink');
-      const menuToggle = document.getElementById('menuToggle');
-      const navMenu = document.getElementById('navMenu');
-
-      if (menuToggle && navMenu) {
-        menuToggle.addEventListener('click', () => {
-          const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
-          menuToggle.setAttribute('aria-expanded', String(!isOpen));
-          navMenu.hidden = isOpen;
-          document.querySelector('.topbar').classList.toggle('open', !isOpen);
-        });
-      }
-
+      const token = new URLSearchParams(location.search).get('data');
       if (!token) {
-        message.textContent = 'No QR data found. Use Create QR to generate one.';
+        document.getElementById('message').textContent = 'No QR data found.';
         return;
       }
 
       try {
         const payload = await decryptPayload(token);
-        message.style.display = 'none';
-        result.style.display = 'block';
+        document.getElementById('message').style.display = 'none';
+        document.getElementById('result').style.display = 'block';
 
+        // QR Logic
         const qrContainer = document.getElementById('qrContainer');
-        const toggleQrInput = document.getElementById('toggleQr');
-        const qrToggleLabel = document.querySelector('.qr-toggle-label');
-
-        toggleQrInput.addEventListener('change', () => {
-          const visible = toggleQrInput.checked;
-          qrContainer.style.display = visible ? 'grid' : 'none';
-          qrToggleLabel.textContent = visible ? 'Click to hide QR' : 'Click to show QR';
+        const toggleQr = document.getElementById('toggleQr');
+        toggleQr.addEventListener('change', () => {
+          qrContainer.style.display = toggleQr.checked ? 'grid' : 'none';
+          document.querySelector('.qr-toggle-label').textContent = toggleQr.checked ? 'Click to hide QR' : 'Click to show QR';
         });
 
+        // Basic Info
         document.getElementById('name').textContent = `${payload.firstName || ''} ${payload.lastName || ''}`.trim() || '—';
+        
+        const setupLink = (id, rowId, value, prefix) => {
+          const row = document.getElementById(rowId);
+          if (value) {
+            row.style.display = 'flex';
+            const link = document.getElementById(id);
+            link.href = prefix + value;
+            link.textContent = value;
+          } else { row.style.display = 'none'; }
+        };
+        setupLink('phoneLink', 'phoneRow', payload.phone, 'tel:');
+        setupLink('emailLink', 'emailRow', payload.email, 'mailto:');
 
-        if (payload.phone) {
-          document.getElementById('phoneRow').style.display = 'flex';
-          document.getElementById('phoneLink').href = `tel:${payload.phone}`;
-          document.getElementById('phoneLink').textContent = payload.phone;
-        } else {
-          document.getElementById('phoneRow').style.display = 'none';
-        }
-
-        if (payload.email) {
-          document.getElementById('emailRow').style.display = 'flex';
-          document.getElementById('emailLink').href = `mailto:${payload.email}`;
-          document.getElementById('emailLink').textContent = payload.email;
-        } else {
-          document.getElementById('emailRow').style.display = 'none';
-        }
-
-        // Render Socials with Icons
-        document.getElementById('socialsSection').innerHTML = createList('Socials', payload.socials || [], item => {
+        // Render Social Grid
+        document.getElementById('socialsSection').innerHTML = createGrid('Socials', payload.socials || [], item => {
           const url = buildSocialUrl(item);
           const iconClass = iconMap[item.name.toLowerCase()] || 'fa-solid fa-link';
-          const display = item.username ? `@${item.username}` : url;
           return `
-            <li>
+            <a href="${url}" target="_blank" rel="noreferrer" class="social-item" title="${item.name}">
               <span class="social-icon"><i class="${iconClass}"></i></span>
-              <a href="${url}" target="_blank" rel="noreferrer">${display}</a>
-            </li>`;
+            </a>`;
         });
 
-        // Render Websites
-        document.getElementById('websitesSection').innerHTML = createList('Websites', payload.websites || [], item => {
+        // Render Websites as a grid too
+        document.getElementById('websitesSection').innerHTML = createGrid('Websites', payload.websites || [], item => {
           return `
-            <li>
+            <a href="${item.url}" target="_blank" rel="noreferrer" class="social-item" title="Website">
               <span class="social-icon"><i class="fa-solid fa-globe"></i></span>
-              <a href="${item.url}" target="_blank" rel="noreferrer">${item.url}</a>
-            </li>`;
+            </a>`;
         });
 
-        editLink.href = `create.html?mode=edit&data=${encodeURIComponent(token)}`;
-        const shareUrl = `${location.origin}${location.pathname}?data=${encodeURIComponent(token)}`;
-        document.getElementById('qrImage').src = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' + encodeURIComponent(shareUrl);
+        document.getElementById('editLink').href = `create.html?mode=edit&data=${encodeURIComponent(token)}`;
+        document.getElementById('qrImage').src = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' + encodeURIComponent(location.href);
+
+        // Menu Toggle
+        const menuToggle = document.getElementById('menuToggle');
+        menuToggle.addEventListener('click', () => {
+          const open = menuToggle.getAttribute('aria-expanded') === 'true';
+          menuToggle.setAttribute('aria-expanded', !open);
+          document.getElementById('navMenu').hidden = open;
+          document.querySelector('.topbar').classList.toggle('open', !open);
+        });
 
       } catch (e) {
-        console.error(e);
-        message.textContent = 'Unable to decrypt QR data.';
+        document.getElementById('message').textContent = 'Unable to decrypt QR data.';
       }
     });
   </script>
